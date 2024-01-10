@@ -46,10 +46,10 @@
       reboot:
         reboot_timeout: 600
 
-    - name: Stop PostgreSQL if already running
-      become: true
-      shell: sudo kill $(cat /var/lib/postgresql/14/main/postmaster.pid)
-      ignore_errors: true
+    # - name: Stop PostgreSQL if already running
+    #   become: true
+    #   shell: sudo kill $(cat /var/lib/postgresql/14/main/postmaster.pid)
+    #   ignore_errors: true
 
     - name: Start DB
       become: true
