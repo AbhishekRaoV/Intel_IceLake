@@ -142,11 +142,13 @@ pipeline {
                     echo res
 
                     if (res) {
-                        if (params.InstanceType == "C4_2XLARGE") {
+                        if (params.InstanceType == "c4.2xlarge") {
                             hourlyRate = "0.398"
                         } else if (params.InstanceType == "M6I_XLARGE") {
                             hourlyRate = "0.192"
                         } else if (params.InstanceType == "M6I_4XLARGE") {
+                            hourlyRate = "0.768"
+                        }else if (params.InstanceType == "m7i.2xlarge") {
                             hourlyRate = "0.768"
                         }
 
