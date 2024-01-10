@@ -147,7 +147,7 @@ pipeline {
                     def os = params.OS
                     def volumeType = params.VolumeType
                     def volumeSize = params.VolumeSize
-                    def cost = cost  // Assuming 'cost' is a variable containing the calculated cost value
+                    // def cost = cost  // Assuming 'cost' is a variable containing the calculated cost value
 
                     // Build number
                     def buildNumber = currentBuild.number
@@ -165,11 +165,11 @@ pipeline {
                             os VARCHAR(255),
                             volume_type VARCHAR(255),
                             volume_size INT,
-                            cost DOUBLE
+                            
                         );
 
-                        INSERT INTO your_table (build_number, generation, optimization, instance_type, os, volume_type, volume_size, cost)
-                        VALUES ('$buildNumber', '$generation', '$optimization', '$instanceType', '$os', '$volumeType', '$volumeSize', '$cost')
+                        INSERT INTO your_table (build_number, generation, optimization, instance_type, os, volume_type, volume_size)
+                        VALUES ('$buildNumber', '$generation', '$optimization', '$instanceType', '$os', '$volumeType', '$volumeSize' )
                         """)
 
 
