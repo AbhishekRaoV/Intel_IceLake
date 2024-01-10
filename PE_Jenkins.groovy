@@ -57,6 +57,25 @@ pipeline {
         stage('Install & Configure') {
             steps {
                 script {
+                    def timeoutSeconds = 300  // Set a reasonable timeout
+
+                        timeout(time: timeoutSeconds, unit: 'SECONDS') {
+                            boolean ansiblePingSuccess = false
+    
+                            while (!ansiblePingSuccess) {
+                                // Run Ansible ping command
+                                def ansiblePingCommand = "ansible all -m ping"
+                                def ansiblePingResult = sh(script: ansiblePingCommand, returnStatus: true)
+    
+                                if (ansiblePingResult == 0) {
+                                    ansiblePingSuccess = true
+                                    echo "Ansible ping successful!"
+                                } else {
+                                    echo "Ansible ping failed. Retrying..."
+                                    sleep 10  // Adjust sleep duration as needed
+                                }
+                            }
+                        }
 
                     if("${params.Optimization}" == "Optimized"){
                     sh """
