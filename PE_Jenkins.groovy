@@ -47,6 +47,8 @@ pipeline {
                         def command = "date +%T"
                         start = sh(returnStdout: true, script: command).trim()
                         echo start
+                        // Echo the environment variable
+                        echo "env.START_TIME: ${env.START_TIME}"
                         sh "terraform apply -no-color -var instance_type=${params.InstanceType} -var volume_type=${params.VolumeType} -var volume_size=${params.VolumeSize} --auto-approve"
                         sh "terraform output -json private_ips | jq -r '.[]'"
                         waitStatus()
@@ -127,6 +129,55 @@ pipeline {
         //         }
         //     }
         // }
+        stage('Push to Mysql'){
+            steps{
+                script{
+                    // MySQL connection details
+                    def mysqlServerIP = '10.63.34.188'
+                    def mysqlDatabase = 'intel'
+                    def mysqlUser = 'jenkins'
+
+                    def url = "jdbc:mysql://${mysqlServerIP}:3306/${mysqlDatabase}"
+                    def user = mysqlUser
+
+                    // Generation, Optimization, InstanceType, OS, VolumeType, VolumeSize, and Cost values
+                    def generation = params.Generation
+                    def optimization = params.Optimization
+                    def instanceType = params.InstanceType
+                    def os = params.OS
+                    def volumeType = params.VolumeType
+                    def volumeSize = params.VolumeSize
+                    def cost = cost  // Assuming 'cost' is a variable containing the calculated cost value
+
+                    // Build number
+                    def buildNumber = currentBuild.number
+
+                    // Connect to the MySQL database
+                    def sql = Sql.newInstance(url, user, 'com.mysql.cj.jdbc.Driver')
+
+                    // Insert data into the MySQL table
+                    sql.execute("""
+                        CREATE TABLE IF NOT EXISTS your_table (
+                            build_number INT,
+                            generation VARCHAR(255),
+                            optimization VARCHAR(255),
+                            instance_type VARCHAR(255),
+                            os VARCHAR(255),
+                            volume_type VARCHAR(255),
+                            volume_size INT,
+                            cost DOUBLE
+                        );
+
+                        INSERT INTO your_table (build_number, generation, optimization, instance_type, os, volume_type, volume_size, cost)
+                        VALUES ('$buildNumber', '$generation', '$optimization', '$instanceType', '$os', '$volumeType', '$volumeSize', '$cost')
+                        """)
+
+
+                    // Close the database connection
+                    sql.close()
+                }
+            }
+        }
     }
 
     post('Destroy Infra'){
