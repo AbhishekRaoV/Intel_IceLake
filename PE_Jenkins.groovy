@@ -141,8 +141,8 @@ pipeline {
                 echo stop
                 //calculate cost
                 sh "chmod +x cost.sh"
-                def command = "bash cost.sh ${start} ${stop}"
-                res = sh(returnStdout: true, script: command).trim()
+                def command1 = "bash cost.sh ${start} ${stop}"
+                res = sh(returnStdout: true, script: command1).trim()
 
                 echo res
                 if("$params.InstanceType" == "c4.2xlarge"){
