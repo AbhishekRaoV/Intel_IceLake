@@ -110,25 +110,25 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                script {
-                    // sh """
-                    //     ansible-playbook -i myinventory restore_db.yaml 
+        // stage('Test') {
+        //     steps {
+        //         script {
+        //             // sh """
+        //             //     ansible-playbook -i myinventory restore_db.yaml 
                         
-                    // """
-                    // ansible-playbook -i myinventory test_hammer.yaml -e postgres_ip=${postgres_ip}
-                    //     ansible-playbook -i myinventory restore_db.yaml 
-                    //     ansible-playbook -i myinventory test_hammer.yaml -e postgres_ip=${postgres_ip}
-                    //     ansible-playbook -i myinventory restore_db.yaml 
-                }
-            }
-            post('Artifact'){
-            success{
-                    archiveArtifacts artifacts: '**/results.txt'
-                }
-            }
-        }
+        //             // """
+        //             // ansible-playbook -i myinventory test_hammer.yaml -e postgres_ip=${postgres_ip}
+        //             //     ansible-playbook -i myinventory restore_db.yaml 
+        //             //     ansible-playbook -i myinventory test_hammer.yaml -e postgres_ip=${postgres_ip}
+        //             //     ansible-playbook -i myinventory restore_db.yaml 
+        //         }
+        //     }
+        //     post('Artifact'){
+        //     success{
+        //             archiveArtifacts artifacts: '**/results.txt'
+        //         }
+        //     }
+        // }
 
         stage('Push to Mysql'){
             steps{
