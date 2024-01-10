@@ -145,13 +145,13 @@ pipeline {
                 res = sh(returnStdout: true, script: command).trim()
 
                 echo res
-                if("$params.InstanceType" == "C4_2XLARGE"){
+                if("$params.InstanceType" == "c4.2xlarge"){
                     hourlyRate = "0.398"
                 }
-                if("$params.InstanceType" == "M6I_XLARGE"){
+                if("$params.InstanceType" == "m6i.xlarge"){
                     hourlyRate = "0.192"
                 }
-                if("$params.InstanceType" == "M6I_4XLARGE"){
+                if("$params.InstanceType" == "m6i.4xlarge"){
                     hourlyRate = "0.768"
                 }
                 def numericRes = res.toInteger()
