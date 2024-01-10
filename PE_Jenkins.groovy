@@ -1,3 +1,8 @@
+def start = ""
+def stop = ""
+def res = ""
+def hourlyRate = ""
+def cost = ""
 pipeline {
     agent any
     environment {
@@ -38,13 +43,10 @@ pipeline {
                 script {
                         sh "terraform init"
                         sh "terraform validate"
-                        def startTime = sh(script: "date -u '+%Y-%m-%dT%H:%M:%SZ'", returnStdout: true)
-                        echo "Raw start time: ${startTime}"
-                        
-                        // Trim the output and set the environment variable
-                        startTime = startTime.trim()
-                        env.START_TIME = startTime
-                        
+                        //calculate time
+                        def command = "date +%T"
+                        start = sh(returnStdout: true, script: command).trim()
+                        echo start
                         // Echo the environment variable
                         echo "env.START_TIME: ${env.START_TIME}"
                         sh "terraform apply -no-color -var instance_type=${params.InstanceType} -var volume_type=${params.VolumeType} -var volume_size=${params.VolumeSize} --auto-approve"
@@ -133,13 +135,29 @@ pipeline {
         always{
             script{
                 sh "terraform destroy --auto-approve "
-                def endTime = sh(script: "date -u '+%Y-%m-%dT%H:%M:%SZ'", returnStdout: true).trim()
-                env.END_TIME = endTime
-                echo "env.END_TIME: ${env.END_TIME}"
-                def duration = env.END_TIME.toInteger() - env.START_TIME.toInteger()
-                def hourlyRate = env["${params.INSTANCE_TYPE}"].toBigDecimal()
-                def cost = duration / 3600 * hourlyRate
-                echo "Total Cost: $cost USD"
+                //calculate end time
+                def command = "date +%T"
+                stop = sh(returnStdout: true, script: command).trim()
+                echo stop
+                //calculate cost
+                sh "chmod +x cost.sh"
+                def command = "bash cost.sh ${start} ${stop}"
+                res = sh(returnStdout: true, script: command).trim()
+
+                echo res
+                if("$params.InstanceType" == "C4_2XLARGE"){
+                    hourlyRate = "0.398"
+                }
+                if("$params.InstanceType" == "M6I_XLARGE"){
+                    hourlyRate = "0.192"
+                }
+                if("$params.InstanceType" == "M6I_4XLARGE"){
+                    hourlyRate = "0.768"
+                }
+                def numericRes = res.toInteger()
+                def hourlyRateBigDecimal = hourlyRate.toDouble()
+                cost = numericRes / 3600 * hourlyRateBigDecimal * 2
+                echo "Cost: ${cost.toString()}"
             }
         }
     }
