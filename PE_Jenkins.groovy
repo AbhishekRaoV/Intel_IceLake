@@ -47,8 +47,6 @@ pipeline {
                         def command = "date +%T"
                         start = sh(returnStdout: true, script: command).trim()
                         echo start
-                        // Echo the environment variable
-                        echo "env.START_TIME: ${env.START_TIME}"
                         sh "terraform apply -no-color -var instance_type=${params.InstanceType} -var volume_type=${params.VolumeType} -var volume_size=${params.VolumeSize} --auto-approve"
                         sh "terraform output -json private_ips | jq -r '.[]'"
                         waitStatus()
