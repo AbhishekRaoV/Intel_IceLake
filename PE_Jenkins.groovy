@@ -22,6 +22,7 @@ pipeline {
         M7I_8XLARGE = '1.6128'
         M7I_16XLARGE = '3.2256'
     }
+    
     parameters {
         // choice(name: 'Generation', choices: ['3rd-Gen','4th-Gen'], description: 'Intel processor generation') 
         choice(name: 'Optimization', choices: ['Optimized','Non-Optimized'], description: 'Use Intel optimized instance type or not') 
@@ -129,6 +130,7 @@ pipeline {
         //         }
         //     }
         // }
+
         stage('Push to Mysql'){
             steps{
                 script{
