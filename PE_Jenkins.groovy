@@ -1,3 +1,9 @@
+def start = ""
+def stop = ""
+def res = ""
+def hourlyRate = ""
+def cost = ""
+
 pipeline {
     agent any
     parameters {
@@ -21,6 +27,9 @@ pipeline {
                 script {
                         sh "terraform init"
                         sh "terraform validate"
+                        def command = "date +%T"
+                        start = sh(returnStdout: true, script: command).trim()
+                        echo start
                         sh "terraform apply -no-color -var instance_type=${params.InstanceType} -var volume_type=${params.VolumeType} -var volume_size=${params.VolumeSize} --auto-approve"
                         sh "terraform output -json private_ips | jq -r '.[]'"
                         waitStatus()
@@ -95,6 +104,63 @@ pipeline {
             post('Artifact'){
             success{
                     archiveArtifacts artifacts: '**/results.txt'
+                }
+            }
+        }
+        stage('Push to Mysql') {
+            steps {
+                script {
+                    def command = "date +%T"
+                    stop = sh(returnStdout: true, script: command).trim()
+                    echo stop
+
+                    // calculate cost
+                    sh "chmod +x cost.sh"
+                    def command1 = "bash cost.sh ${start} ${stop}"
+                    res = sh(returnStdout: true, script: command1).trim()
+
+                    echo res
+
+                    if (res) {
+                        if (params.InstanceType == "C4_2XLARGE") {
+                            hourlyRate = "0.398"
+                        } else if (params.InstanceType == "M6I_XLARGE") {
+                            hourlyRate = "0.192"
+                        } else if (params.InstanceType == "M6I_4XLARGE") {
+                            hourlyRate = "0.768"
+                        }
+
+                        // def numericRes = res.toInteger()
+                        def hourlyRateBigDecimal = hourlyRate.toDouble()
+                        cost = res / 3600 * hourlyRateBigDecimal * 2
+                        echo "Cost: ${cost.toString()}"
+                    } else {
+                        echo "Error: 'res' is empty, cannot calculate cost."
+                    }
+
+                    def generation = params.Generation
+                    def optimization = params.Optimization
+                    def instanceType = params.InstanceType
+                    def os = params.OS
+                    def volumeType = params.VolumeType
+                    def volumeSize = params.VolumeSize
+                    def buildNumber = currentBuild.number
+
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@10.63.34.188 'sudo mysql -u root intel -e "CREATE TABLE IF NOT EXISTS sysconfig (
+                            build_number INT,
+                            generation VARCHAR(255),
+                            optimization VARCHAR(255),
+                            instance_type VARCHAR(255),
+                            os VARCHAR(255),
+                            volume_type VARCHAR(255),
+                            volume_size INT,
+                            cost FLOAT
+                        );"'
+                    """
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@10.63.34.188 "sudo mysql -u root intel -e 'INSERT INTO sysconfig (build_number, generation, optimization, instance_type, os, volume_type, volume_size, cost) VALUES (${buildNumber}, \\"${generation}\\", \\"${optimization}\\", \\"${instanceType}\\", \\"${os}\\", \\"${volumeType}\\", ${volumeSize}, ${cost} );'"
+                    """
                 }
             }
         }
