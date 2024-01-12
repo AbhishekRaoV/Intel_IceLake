@@ -1,5 +1,5 @@
 ---
-- name: Config HammerDB
+- name: Test HammerDB
   hosts: hammer
   become: true
   vars:
@@ -11,14 +11,14 @@
           dbset db pg
           dbset bm tpc-c
           diset connection pg_host {{ postgres_ip }}
-          diset tpcc pg_count_ware 20
+          diset tpcc pg_count_ware 85
           diset tpcc pg_superuserpass admin
           diset tpcc pg_total_iterations 10000000
-          diset tpcc pg_rampup 1
+          diset tpcc pg_rampup 5
           diset tpcc pg_duration 15
           diset tpcc pg_driver timed
           loadscript
-          vuset vu 2
+          vuset vu 24
           vuset vu logtotemp 1
           vucreate
           vurun
@@ -26,12 +26,40 @@
         dest: HammerDB-4.1/hammerdb_arguments_test.tcl
     - name: Run test commands
       shell:
-        cmd: ./hammerdbcli auto hammerdb_arguments_test.tcl
+        cmd: ./hammerdbcli auto hammerdb_arguments_test.tcl > output.txt
         chdir: HammerDB-4.1
-      register: test_op
-    - name: Display result
+
+    - name: Fetch output.txt from remote host to localhost
+      fetch:
+        src: "HammerDB-4.1/output.txt"
+        dest: "{{ playbook_dir }}/output.txt"
+        flat: yes
+
+    - name: Cat op
+      delegate_to: localhost
+      shell: cat output.txt
+      register: result_op
+
+    - name: Display op
+      delegate_to: localhost
       debug:
-        var: test_op
+        var: result_op
+
+    - name: Trim the results
+      delegate_to: localhost
+      shell: |
+        grep 'TEST RESULT : System achieved' output.txt | awk -F ': ' '{print $2}' | sed 's/"',$// >> results.txt
+      
+    - name: Cat results
+      delegate_to: localhost
+      shell: cat results.txt
+      register: final_op
+
+    - name: Display results
+      delegate_to: localhost
+      debug:
+        var: final_op
+        
     - name: Write destroy content
       copy:
         content: vudestroy

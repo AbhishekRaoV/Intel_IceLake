@@ -13,8 +13,8 @@
         name: "{{ item }}"
         state: present
       loop:
-        - postgresql
-        - postgresql-contrib
+        - postgresql-14
+        - postgresql-contrib-14
 
     - name: Start service
       become: true

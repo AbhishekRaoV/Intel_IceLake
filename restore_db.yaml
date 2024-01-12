@@ -4,13 +4,21 @@
   become: true
   tasks:
     - name: Stop db
-      command:
-        cmd: su - postgres -c 'pg_ctl -D $PGDATA stop'
+      command: su - postgres -c 'pg_ctl -D $PGDATA stop -m smart'
       register: restore_stop_db_status
+      ignore_errors: true
+
     - name: Display status
       debug:
         var: restore_stop_db_status
-    - name: Delete, copy, move and link files
+
+    - name: Wait for PostgreSQL to stop
+      wait_for:
+        path: "/var/lib/postgresql/14/main/postmaster.pid"
+        state: absent
+      when: restore_stop_db_status.rc == 0
+
+    - name: Delete, copy, move, and link files
       shell: |
         PGDATA=/var/lib/postgresql/14/main
         export PGDATA
@@ -19,30 +27,35 @@
         cp -R /var/lib/postgresql/14/backups/main/* $PGDATA/
         mv $PGDATA/pg_wal /var/lib/postgresql/14/log
         ln -s /var/lib/postgresql/14/log/pg_wal $PGDATA/pg_wal
+
     - name: Give permissions
       file:
         path: /var/lib/postgresql/14/main/
         owner: postgres
         group: postgres
         recurse: yes
+
     - name: Set directory permissions
       file:
         path: /var/lib/postgresql/14/main/
         mode: "0700"
         recurse: yes
         state: directory
+
     - name: Reboot machine
       reboot:
         reboot_timeout: 600
+
     - name: Stop PostgreSQL if already running
       become: true
       shell: sudo kill $(cat /var/lib/postgresql/14/main/postmaster.pid)
       ignore_errors: true
+
     - name: Start DB
       become: true
-      command:
-        cmd: su - postgres -c 'pg_ctl -D $PGDATA start'
+      command: su - postgres -c 'pg_ctl -D $PGDATA start'
       register: restore_start_db_status
+
     - name: Display status
       debug:
         var: restore_start_db_status

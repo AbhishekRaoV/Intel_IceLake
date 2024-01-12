@@ -77,7 +77,7 @@
 
     - name: Insert to /etc/sysctl.conf file
       lineinfile:
-        line: vm.nr_hugepages = 10
+        line: vm.nr_hugepages = 5760
         dest: /etc/sysctl.conf
         insertafter: EOF
 

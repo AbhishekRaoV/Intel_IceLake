@@ -1,0 +1,31 @@
+---
+- name: Config Prometheus for node exporter
+  hosts: prometheus
+  become: true
+  vars:
+    postgres_ip: "{{ postgres_ip }}"
+  tasks:
+    - name: Remove contents after scrape_configs in prometheus.yml
+      replace:
+        path: /etc/prometheus/prometheus.yml
+        regexp: '(^scrape_configs:.*)\n([\s\S]*)'
+        replace: '\1\n'
+
+    - name: Insert configuration to prometheus
+      lineinfile:
+        path: /etc/prometheus/prometheus.yml
+        insertafter: '^scrape_configs:'
+        line: "{{ lookup('template', 'template.yml.j2') }}"
+
+    - name: Restart prometheus
+      systemd:
+        name: prometheus
+        state: restarted
+
+    - name: Get Promtheus status
+      shell: systemctl status prometheus.service
+      register: prometheus_status
+
+    - name: Display prometheus status
+      debug:
+        var: prometheus_status.stdout_lines

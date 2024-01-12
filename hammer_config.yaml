@@ -20,8 +20,8 @@
           dbset db pg
           dbset bm tpc-c
           diset connection pg_host {{ postgres_ip }}
-          diset tpcc pg_count_ware 2
-          diset tpcc pg_num_vu 2
+          diset tpcc pg_count_ware 85
+          diset tpcc pg_num_vu 8
           diset tpcc pg_superuserpass admin
           buildschema
           waittocomplete

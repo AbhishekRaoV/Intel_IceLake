@@ -1,113 +1,22 @@
-# main.tf
-#test
-provider "aws" {
-  region = "us-east-1" # e.g., us-east-1
+module "ec2-vm" {
+    source = "intel/aws-vm/intel"
+    count = var.instance_count
+    ami = var.ami
+    instance_type= var.instance_type
+    subnet_id= var.subnet_id
+    vpc_security_group_ids= var.security_group_id
+    key_name =  var.key_name
+    root_block_device = [
+        {
+            volume_size = var.volume_size
+            volume_type= var.volume_type //example:- gp2,gp3,io1,io2,sc1,st1,standard
+        }
+    ]
+    tags = {
+        Name     = "my-test-vm-${count.index + 1}"
+        Owner    = "OwnerName-${random_id.rid.dec}",
+    }
 }
- 
-# Assuming you already have an existing VPC with ID "vpc-xxxxxxxxxxxxxxxxx"
-data "aws_vpc" "existing_vpc" {
-  id = "vpc-05d7fb7f1331f8f16"
-}
- 
-# Assuming you already have an existing security group within the VPC
-# data "aws_security_group" "existing_security_group" {
-#   vpc_id = data.aws_vpc.existing_vpc.id
- 
-#   filter {
-#     name   = "group-name"
-#     values = ["nextgen-devops-sg"]
-#   }
- 
-#   filter {
-#     name   = "tag:Group"
-#     values = ["nextgen-devops-sg"]
-#   }
-# }
- 
-resource "aws_security_group" "myvpc2-sg" {
-  name="myvpc2-sg"
- 
-  vpc_id=data.aws_vpc.existing_vpc.id
- 
-  # ingress {
- 
-  #   from_port=22
-  #   to_port=22
-  #   protocol="tcp"
-  #   cidr_blocks=[data.aws_vpc.existing_vpc.cidr_block]
-  #   ipv6_cidr_blocks = ["::/0"]
- 
- 
-  # }
- 
-  # egress {
-  #   from_port = 0
-  #   to_port=0
-  #   protocol="-1"
-  #   cidr_blocks=["0.0.0.0/0"]
-  #   ipv6_cidr_blocks = ["::/0"]
-  # }
- 
-  tags = {
-    Name="allow_tls"
-  }
- 
-}
- 
-resource "aws_security_group_rule" "ssh_ingress" {
-  security_group_id = aws_security_group.myvpc2-sg.id
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-}
- 
-resource "aws_security_group_rule" "custom_port_ingress" {
-  security_group_id = aws_security_group.myvpc2-sg.id
-  type              = "ingress"
-  from_port         = 5432
-  to_port           = 5432
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-}
- 
-resource "aws_security_group_rule" "all_outbound" {
-  security_group_id = aws_security_group.myvpc2-sg.id
-  type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-}
- 
- 
-# Assuming you already have an existing private subnet within the VPC
-data "aws_subnet" "existing_private_subnet" {
-  vpc_id                  = data.aws_vpc.existing_vpc.id
-  # Specify criteria to uniquely identify the private subnet
-  id= "subnet-02cf2e19298b8cdac"
-  cidr_block              = "10.63.20.0/25"
-}
- 
-variable "instance_count" {
-  default = 2
-}
- 
-resource "aws_instance" "example_instance" {
-count = var.instance_count
-  ami           = "ami-0c7217cdde317cfec" # Replace with the desired AMI ID
-  instance_type = "m7i.2xlarge"    # Adjust the instance type as needed
-  subnet_id     = data.aws_subnet.existing_private_subnet.id
-  key_name      = "nextgen-devops-team"
- 
-#   security_group_name = [data.aws_security_group.existing_security_group.name]
- 
-  tags = {
-    Name = "${count.index + 1}"  # Adds a unique index to each instance name
-    Role = count.index == 0 ? "postgres" : "hammer"  # Assigns different roles to each instance
-  }
-}
-output "private_ips" {
-  value = aws_instance.example_instance[*].private_ip
+resource "random_id" "rid" {
+  byte_length = 4
 }

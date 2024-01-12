@@ -1,0 +1,143 @@
+---
+- name: Postgres DB Config with optimisation
+  hosts: postgres
+  become: true
+  vars:
+    postgres_ip: "{{ postgres_ip }}"
+    hammer_ip: "{{ hammer_ip }}"
+  tasks:
+    - name: Stop PostgreSQL if already running
+      become: true
+      shell: |
+        sudo systemctl stop postgresql
+        ps aux | grep postgres | awk '{print $2}' | xargs kill -9
+      ignore_errors: true
+    - name: Wait for 10 seconds
+      pause:
+        seconds: 10
+    - name: Remove existing shared memory blocks
+      shell: ipcs -m | grep postgres | awk '{print $2}' | xargs ipcrm -m
+      ignore_errors: true
+    - name: Create directory
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - /var/lib/postgresql/14/log
+        - /var/lib/postgresql/14/backups
+    - name: give permissions
+      file:
+        path: "{{ item }}"
+        owner: postgres
+        group: postgres
+        recurse: yes
+      loop:
+        - /var/lib/postgresql
+        - /var/tmp/
+    - name: Insert environment variables
+      copy:
+        content: |
+          PGDATA=/var/lib/postgresql/14/main
+          export PGDATA
+          PATH=$PATH:$HOME:/usr/bin:/usr/local/bin:/usr/lib/postgresql/14/bin
+          export PATH
+          LD_LIBRARY_PATH=/usr/lib/postgresql/14/lib
+          export LD_LIBRARY_PATH
+        dest: /var/lib/postgresql/.bash_profile
+    - name: source .bash_profile
+      command:
+        cmd: su - postgres -c "source /var/lib/postgresql/.bash_profile"
+    - name: Remove old files
+      shell: rm -rf /var/lib/postgresql/14/main/*
+    - name: Stop PostgreSQL if already running
+      become: true
+      shell: sudo kill $(cat /var/lib/postgresql/14/main/postmaster.pid)
+      ignore_errors: true
+    - name: Wait for 30 seconds
+      pause:
+        seconds: 30
+    - name: init DB
+      command:
+        cmd: su - postgres -c "initdb -D $PGDATA"
+      register: init_db_status
+    - name: Display status
+      debug:
+        var: init_db_status.stdout_lines
+    - name: Insert to /etc/sysctl.conf file
+      lineinfile:
+        line: vm.nr_hugepages = 5760
+        dest: /etc/sysctl.conf
+        insertafter: EOF
+    - name: Reboot machine
+      reboot:
+        reboot_timeout: 600
+    - name: Edit pg_hba.conf file in $PGDATA
+      lineinfile:
+        line: host    all             all             {{ hammer_ip
+          }}/32            trust
+        dest: /var/lib/postgresql/14/main/pg_hba.conf
+        insertafter: host    all             all             127.0.0.1/32            trust
+    - name: Update max_connections in postgresql.conf
+      ansible.builtin.lineinfile:
+        path: /var/lib/postgresql/14/main/postgresql.conf
+        regexp: "^max_connections = "
+        line: max_connections = 256
+    - name: Update shared_buffer in postgresql.conf
+      ansible.builtin.lineinfile:
+        path: /var/lib/postgresql/14/main/postgresql.conf
+        regexp: "^shared_buffers = "
+        line: shared_buffers = 9600MB
+      notify: Reload PostgreSQL
+    - name: Edit postgres.conf
+      lineinfile:
+        line: |
+          listen_addresses= '{{ postgres_ip }}'
+          port = 5432 
+          huge_pages = on
+          temp_buffers = 512MB
+          work_mem = 512MB
+          maintenance_work_mem = 256MB
+          autovacuum_work_mem = -1
+          max_stack_depth = 5MB
+          max_files_per_process = 4000
+          effective_io_concurrency = 32
+          wal_level = minimal
+          synchronous_commit = off
+          wal_buffers = 512MB
+          checkpoint_timeout = 1h
+          checkpoint_completion_target = 1
+          checkpoint_warning = 0
+          max_wal_senders = 0
+          log_destination = 'stderr'
+          logging_collector = on
+          log_directory = 'log'
+          log_filename = 'postgresql-%a.log'
+          log_truncate_on_rotation = on
+          log_rotation_age = 1d
+          log_rotation_size = 0
+          log_min_messages = error
+          log_min_error_statement = error
+          log_line_prefix = '%m [%p] '
+          max_locks_per_transaction = 64
+          max_pred_locks_per_transaction = 64
+          external_pid_file = '/var/run/postgresql/14-main.pid'
+          unix_socket_directories = '/var/run/postgresql'
+          stats_temp_directory = '/var/run/postgresql/14-main.pg_stat_tmp'
+        dest: /var/lib/postgresql/14/main/postgresql.conf
+        insertafter: "#port = 5432                            # (change requires restart)"
+    - name: Stop PostgreSQL if already running
+      become: true
+      shell: sudo kill $(cat /var/lib/postgresql/14/main/postmaster.pid)
+      ignore_errors: true
+    - name: Start DB
+      command:
+        cmd: su - postgres -c "pg_ctl -D $PGDATA start"
+      register: start_db_status
+    - name: Display status
+      debug:
+        var: start_db_status.stdout_lines
+  handlers:
+    - name: Reload PostgreSQL
+      ansible.builtin.service:
+        name: postgresql
+        state: reloaded
