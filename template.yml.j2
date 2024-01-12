@@ -2,10 +2,10 @@
     static_configs:
       - targets: ['{{ postgres_ip }}:9187']
         labels:
-          BuildNumber: '{{ build_number }}'
+          BuildNumber: '{{ BuildNumber }}'
 
   - job_name: 'node_exporter {{ build_number }}'
     static_configs:
       - targets: ['{{ postgres_ip }}:9100']
         labels:
-          BuildNumber: '{{ build_number }}'
+          BuildNumber: '{{ BuildNumber }}'
