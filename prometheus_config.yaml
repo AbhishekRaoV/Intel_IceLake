@@ -4,12 +4,13 @@
   become: true
   vars:
     postgres_ip: "{{ postgres_ip }}"
+    BuildNumber: "{{ buildNumber }}"
   tasks:
-    - name: Remove contents after scrape_configs in prometheus.yml
-      replace:
-        path: /etc/prometheus/prometheus.yml
-        regexp: '(^scrape_configs:.*)\n([\s\S]*)'
-        replace: '\1\n'
+    # - name: Remove contents after scrape_configs in prometheus.yml
+    #   replace:
+    #     path: /etc/prometheus/prometheus.yml
+    #     regexp: '(^scrape_configs:.*)\n([\s\S]*)'
+    #     replace: '\1\n'
 
     - name: Insert configuration to prometheus
       lineinfile:
