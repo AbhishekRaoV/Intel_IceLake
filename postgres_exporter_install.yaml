@@ -1,6 +1,6 @@
 ---
 - name: Install Postgres Exporter
-  hosts: postgres, hammer
+  hosts: postgres
   become: true
   vars:
     postgres_ip: "{{ postgres_ip }}"
