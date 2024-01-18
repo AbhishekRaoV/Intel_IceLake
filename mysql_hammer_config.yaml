@@ -8,11 +8,11 @@
     - name: Unset LD_LIBRARY_PATH
       shell:
         cmd: unset LD_LIBRARY_PATH
-        chdir: HammerDB-4.1
+        chdir: HammerDB-4.2
     - name: Export LD_LIBRARY_PATH
       shell:
         cmd: export LD_LIBRARY_PATH=/usr/lib/postgresql/14/lib
-        chdir: HammerDB-4.1
+        chdir: HammerDB-4.2
     - name: Write file contents
       copy:
         content: |
@@ -27,11 +27,11 @@
           diset tpcc mysql_storage_engine innodb
           buildschema
           waittocomplete
-        dest: HammerDB-4.1/hammerdb_arguments.tcl
+        dest: HammerDB-4.2/hammerdb_arguments.tcl
     - name: Run test commands
       shell:
         cmd: ./hammerdbcli auto hammerdb_arguments.tcl 
-        chdir: HammerDB-4.1
+        chdir: HammerDB-4.2
       register: test_op
     - name: Display test_op
       debug:
@@ -40,11 +40,11 @@
     # - name: Write destroy content
     #   copy:
     #     content: vudestroy
-    #     dest: HammerDB-4.1/hammerdb_arguments_destroy.tcl
+    #     dest: HammerDB-4.2/hammerdb_arguments_destroy.tcl
     # - name: Run destroy
     #   shell:
     #     cmd: ./hammerdbcli auto hammerdb_arguments_destroy.tcl
-    #     chdir: HammerDB-4.1
+    #     chdir: HammerDB-4.2
     #   register: destroy_op
     # - name: Display destroy op
     #   debug:
