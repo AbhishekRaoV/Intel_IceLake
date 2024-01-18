@@ -167,7 +167,7 @@ pipeline {
                         sh """
                             ansible-playbook -i myinventory mysql_install.yaml
                             ansible-playbook -i myinventory mysql_hammerdb_install.yaml
-                            ansible-playbook -i myinventory mysql_config.yaml -e mysql_ip=${mysql_ip} 
+                            ansible-playbook -i myinventory mysql_config_without_opt.yaml -e mysql_ip=${mysql_ip} 
                             ansible-playbook -i myinventory mysql_hammer_config.yaml -e mysql_ip=${mysql_ip} 
                         """
                         }
