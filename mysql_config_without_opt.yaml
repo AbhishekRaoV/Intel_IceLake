@@ -1,0 +1,61 @@
+---
+- name: Configure mysql server
+  hosts: mysql
+  become: true
+  vars:
+    mysql_ip: "{{ mysql_ip }}"
+  tasks:
+    - name: Start server
+      systemd:
+        name: mysql.service
+        state: started
+      register: mysql_start
+
+    - name: Print status
+      debug:  
+        var: mysql_start.stdout_lines
+
+    - name: Comment Lines
+      lineinfile:
+        regexp: "^(bind-address|mysqlx-bind-address)"
+        line: "# {{ item }}"
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+      with_items:
+        - bind-address            = 127.0.0.1
+        - mysqlx-bind-address     = 127.0.0.1
+
+    - name: Perform IP configuration
+      lineinfile:
+        line: |
+            port=3306
+            bind_address="{{ mysql_ip }}"
+            mysqlx-bind-address="{{ mysql_ip }}"
+        insertafter: EOF 
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        state: present
+
+    - name: Restart mysql
+      systemd: 
+        name: mysql.service
+        state: restarted
+
+    - name: Get status
+      shell: sudo systemctl status mysql.service
+      register: mysql_status
+
+    - name: Print status
+      debug:  
+        var: mysql_status.stdout_lines
+
+    - name: Create mysql user
+      shell: |
+        sudo mysql -e "CREATE USER 'mysql'@'10.63.20.89' IDENTIFIED BY 'admin'; GRANT ALL PRIVILEGES ON *.* TO 'mysql'@'10.63.20.89' WITH GRANT OPTION; ALTER USER 'mysql'@'10.63.20.89' IDENTIFIED WITH mysql_native_password BY 'admin';"
+        sudo mysql -e "CREATE USER 'mysql'@'%' IDENTIFIED BY 'admin'; GRANT ALL PRIVILEGES ON *.* TO 'mysql'@'%' WITH GRANT OPTION; ALTER USER 'mysql'@'%' IDENTIFIED WITH mysql_native_password BY 'admin';"
+        
+        
+
+
+
+
+        
+
