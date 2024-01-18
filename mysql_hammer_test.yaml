@@ -26,15 +26,15 @@
           vucreate
           vurun
           waittocomplete
-        dest: HammerDB-4.1/hammerdb_arguments_test.tcl
+        dest: HammerDB-4.2/hammerdb_arguments_test.tcl
     - name: Run test commands
       shell:
         cmd: ./hammerdbcli auto hammerdb_arguments_test.tcl > output.txt
-        chdir: HammerDB-4.1
+        chdir: HammerDB-4.2
 
     - name: Fetch output.txt from remote host to localhost
       fetch:
-        src: "HammerDB-4.1/output.txt"
+        src: "HammerDB-4.2/output.txt"
         dest: "{{ playbook_dir }}/output.txt"
         flat: yes
 
@@ -66,7 +66,7 @@
     - name: Write destroy content
       copy:
         content: vudestroy
-        dest: HammerDB-4.1/hammerdb_arguments_test_destory.tcl
+        dest: HammerDB-4.2/hammerdb_arguments_test_destory.tcl
     - name: Display test results
       debug:
         var: test_op
