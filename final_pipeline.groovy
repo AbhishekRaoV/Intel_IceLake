@@ -260,7 +260,7 @@ pipeline {
                     def volumeType = params.VolumeType
                     def volumeSize = params.VolumeSize
                     def buildNumber = currentBuild.number
-                    def db = "${parmas.DB}"
+                    def db = params.DB
 
                     sh """
                      mysql -h10.63.34.188 -uroot -proot intel -e 'CREATE TABLE IF NOT EXISTS sysconfig (
