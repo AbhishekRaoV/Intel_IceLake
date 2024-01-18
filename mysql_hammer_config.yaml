@@ -1,0 +1,51 @@
+---
+- name: Config HammerDB
+  hosts: hammer
+  become: true
+  vars:
+    mysql_ip: "{{ mysql_ip }}"
+  tasks:
+    - name: Unset LD_LIBRARY_PATH
+      shell:
+        cmd: unset LD_LIBRARY_PATH
+        chdir: HammerDB-4.1
+    - name: Export LD_LIBRARY_PATH
+      shell:
+        cmd: export LD_LIBRARY_PATH=/usr/lib/postgresql/14/lib
+        chdir: HammerDB-4.1
+    - name: Write file contents
+      copy:
+        content: |
+          puts "SETTING CONFIGURATION"
+          dbset db mysql 
+          diset connection mysql_host {{ mysql_ip }}
+          diset tpcc mysql_user mysql
+          diset tpcc mysql_pass admin
+          diset tpcc mysql_count_ware 250
+          diset tpcc mysql_partition true
+          diset tpcc mysql_num_vu 8
+          diset tpcc mysql_storage_engine innodb
+          buildschema
+          waittocomplete
+        dest: HammerDB-4.1/hammerdb_arguments.tcl
+    - name: Run test commands
+      shell:
+        cmd: ./hammerdbcli auto hammerdb_arguments.tcl 
+        chdir: HammerDB-4.1
+      register: test_op
+    - name: Display test_op
+      debug:
+        var: test_op
+    
+    # - name: Write destroy content
+    #   copy:
+    #     content: vudestroy
+    #     dest: HammerDB-4.1/hammerdb_arguments_destroy.tcl
+    # - name: Run destroy
+    #   shell:
+    #     cmd: ./hammerdbcli auto hammerdb_arguments_destroy.tcl
+    #     chdir: HammerDB-4.1
+    #   register: destroy_op
+    # - name: Display destroy op
+    #   debug:
+    #     var: destroy_op

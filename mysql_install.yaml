@@ -1,0 +1,19 @@
+---
+- name: Install Mysql in cluster nodes
+  hosts: mysql, hammer
+  tasks:
+  - name: install mysql
+    become: true
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop:
+      - mysql-server
+      - mysqltcl
+      - python3-pymysql
+
+  - name: start and get status
+    systemd: 
+      name: mysql.service
+      state: started
+    register: mysql_status

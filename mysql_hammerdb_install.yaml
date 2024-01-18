@@ -1,0 +1,10 @@
+---
+- name: Install hammerDb
+  hosts: mysql, hammer
+  become: true
+  tasks:
+    - name: Download HammerDB 4.2
+      shell: sudo wget https://github.com/TPC-Council/HammerDB/releases/download/v4.2/HammerDB-4.2-Linux.tar.gz
+
+    - name: Untar Hammer Package
+      shell: tar xzvf HammerDB-4.2-Linux.tar.gz

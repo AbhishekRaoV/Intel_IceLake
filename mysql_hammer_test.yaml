@@ -1,0 +1,72 @@
+---
+- name: Test HammerDB
+  hosts: hammer
+  become: true
+  vars:
+    mysql_ip: "{{ mysql_ip }}"
+  tasks:
+    - name: Write file contents
+      copy:
+        content: |
+          dbset db mysql
+          diset connection mysql_host {{ mysql_ip }}
+          diset connection mysql_port 3306
+          diset tpcc mysql_user mysql
+          diset tpcc mysql_pass admin
+          diset tpcc mysql_storage_engine innodb
+          diset tpcc mysql_partition true
+          diset tpcc mysql_driver timed
+          diset tpcc mysql_count_ware 250
+          diset tpcc mysql_num_vu 16
+          diset tpcc mysql_rampup 5
+          diset tpcc mysql_duration 10
+          vuset logtotemp 1
+          loadscript
+          vuset vu 16
+          vucreate
+          vurun
+          waittocomplete
+        dest: HammerDB-4.1/hammerdb_arguments_test.tcl
+    - name: Run test commands
+      shell:
+        cmd: ./hammerdbcli auto hammerdb_arguments_test.tcl > output.txt
+        chdir: HammerDB-4.1
+
+    - name: Fetch output.txt from remote host to localhost
+      fetch:
+        src: "HammerDB-4.1/output.txt"
+        dest: "{{ playbook_dir }}/output.txt"
+        flat: yes
+
+    - name: Cat op
+      delegate_to: localhost
+      shell: cat output.txt
+      register: result_op
+
+    - name: Display op
+      delegate_to: localhost
+      debug:
+        var: result_op
+
+    - name: Trim the results
+      delegate_to: localhost
+      shell: |
+        grep 'TEST RESULT : System achieved' output.txt | awk -F ': ' '{print $2}' | sed 's/"',$// >> results.txt
+      
+    - name: Cat results
+      delegate_to: localhost
+      shell: cat results.txt
+      register: final_op
+
+    - name: Display results
+      delegate_to: localhost
+      debug:
+        var: final_op
+        
+    - name: Write destroy content
+      copy:
+        content: vudestroy
+        dest: HammerDB-4.1/hammerdb_arguments_test_destory.tcl
+    - name: Display test results
+      debug:
+        var: test_op
