@@ -196,7 +196,9 @@ pipeline {
                         }
                             if("${params.DB}" == "MySQL"){ 
                         sh """
-                            ansible-playbook -i myinventory mysql_hammer_test.yaml -e mysql_ip=${mysql_ip}  
+                            ansible-playbook -i myinventory mysql_hammer_test.yaml -e mysql_ip=${mysql_ip} 
+                            ansible-playbook -i myinventory mysql_hammer_test.yaml -e mysql_ip=${mysql_ip} 
+                            ansible-playbook -i myinventory mysql_hammer_test.yaml -e mysql_ip=${mysql_ip} 
                         """
                         }
                 }
