@@ -18,8 +18,8 @@
           diset tpcc mysql_driver timed
           diset tpcc mysql_count_ware 250
           diset tpcc mysql_num_vu 16
-          diset tpcc mysql_rampup 1
-          diset tpcc mysql_duration 1
+          diset tpcc mysql_rampup 5
+          diset tpcc mysql_duration 10
           vuset logtotemp 1
           loadscript
           vuset vu 16
