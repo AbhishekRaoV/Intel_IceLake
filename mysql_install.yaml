@@ -2,6 +2,10 @@
 - name: Install Mysql in cluster nodes
   hosts: mysql, hammer
   tasks:
+  - name: update nodes
+    apt:
+      update_cache: yes
+      
   - name: install mysql
     become: true
     apt:
