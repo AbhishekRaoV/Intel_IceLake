@@ -21,9 +21,9 @@
           diset connection mysql_host {{ mysql_ip }}
           diset tpcc mysql_user mysql
           diset tpcc mysql_pass admin
-          diset tpcc mysql_count_ware 2
+          diset tpcc mysql_count_ware 250
           diset tpcc mysql_partition true
-          diset tpcc mysql_num_vu 2
+          diset tpcc mysql_num_vu 8
           diset tpcc mysql_storage_engine innodb
           buildschema
           waittocomplete
