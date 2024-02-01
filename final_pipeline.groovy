@@ -146,7 +146,7 @@ pipeline {
                             ansible-playbook -i myinventory mysql_install.yaml
                             ansible-playbook -i myinventory mysql_hammerdb_install.yaml
                             ansible-playbook -i myinventory node_exporter_install.yaml
-                            ansible-playbook -i myini prometheus_config.yaml -e mysql_ip=${mysql_ip}
+                            ansible-playbook -i myini prometheus_config.yaml -e postgres_ip=${mysql_ip}
                             ansible-playbook -i myinventory mysql_config.yaml -e mysql_ip=${mysql_ip} 
                             ansible-playbook -i myinventory mysql_hammer_config.yaml -e mysql_ip=${mysql_ip} 
                         """
@@ -170,7 +170,7 @@ pipeline {
                             ansible-playbook -i myinventory mysql_install.yaml
                             ansible-playbook -i myinventory mysql_hammerdb_install.yaml
                             ansible-playbook -i myinventory node_exporter_install.yaml
-                            ansible-playbook -i myini prometheus_config.yaml -e mysql_ip=${mysql_ip}
+                            ansible-playbook -i myini prometheus_config.yaml -e postgres_ip=${mysql_ip}
                             ansible-playbook -i myinventory mysql_config_without_opt.yaml -e mysql_ip=${mysql_ip} 
                             ansible-playbook -i myinventory mysql_hammer_config.yaml -e mysql_ip=${mysql_ip} 
                         """
