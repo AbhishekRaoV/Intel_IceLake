@@ -20,6 +20,4 @@ module "ec2-vm" {
 resource "random_id" "rid" {
   byte_length = 4
 }
-provider "aws"{
-region = "us-east-1"
-}
+
